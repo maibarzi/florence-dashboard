@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Florence Beauty Salon — Dashboard</title>
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+:root {
+  --cream: #F4F0E8;
+  --dark: #1A1A18;
+  --terra: #C4622D;
+  --sage: #7A8C7E;
+  --warm-white: #FAF8F4;
+  --muted: #8A8580;
+  --green: #1D9E75;
+  --green-light: #E1F5EE;
+  --green-dark: #0F6E56;
+  --amber: #F59E0B;
+  --amber-light: #FFFBEB;
+  --red-light: #FEF2F2;
+  --red: #C4622D;
+  --border: rgba(26,26,24,0.1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body { font-family: 'DM Sans', sans-serif; background: var(--cream); min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; }
+
+.app { width: 100%; max-width: 430px; min-height: 100vh; background: var(--warm-white); display: flex; flex-direction: column; position: relative; }
+
+/* PIN SCREEN */
+.pin-screen { position: fixed; inset: 0; background: var(--dark); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; gap: 32px; }
+.pin-screen.hidden { display: none; }
+.pin-logo { font-family: 'Playfair Display', serif; color: white; font-size: 36px; }
+.pin-logo span { color: var(--terra); }
+.pin-subtitle { color: var(--muted); font-size: 14px; }
+.pin-dots { display: flex; gap: 12px; }
+.pin-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); transition: all 0.2s; }
+.pin-dot.filled { background: var(--terra); border-color: var(--terra); }
+.pin-pad { display: grid; grid-template-columns: repeat(3, 72px); gap: 12px; }
+.pin-btn { width: 72px; height: 72px; border-radius: 50%; background: rgba(255,255,255,0.08); border: none; color: white; font-size: 22px; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all 0.15s; }
+.pin-btn:active { background: rgba(255,255,255,0.18); transform: scale(0.95); }
+.pin-btn.del { font-size: 18px; }
+.pin-error { color: var(--terra); font-size: 13px; min-height: 20px; }
+
+/* HEADER */
+.header { background: var(--dark); padding: 16px 20px 14px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
+.header-logo { font-family: 'Playfair Display', serif; color: white; font-size: 20px; }
+.header-logo span { color: var(--terra); }
+.header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.header-salon { color: rgba(255,255,255,0.7); font-size: 12px; }
+.header-date { color: rgba(255,255,255,0.45); font-size: 11px; }
+
+/* NAV */
+.nav { display: flex; background: white; border-bottom: 1px solid var(--border); position: sticky; top: 56px; z-index: 9; }
+.nav-btn { flex: 1; padding: 10px 4px 8px; text-align: center; font-size: 10px; font-family: 'DM Sans', sans-serif; color: var(--muted); cursor: pointer; border: none; background: none; display: flex; flex-direction: column; align-items: center; gap: 4px; border-bottom: 2px solid transparent; transition: all 0.2s; }
+.nav-btn.active { color: var(--terra); border-bottom-color: var(--terra); }
+.nav-icon { font-size: 18px; line-height: 1; }
+
+/* CONTENT */
+.content { flex: 1; overflow-y: auto; padding: 0 0 80px; }
+.page { display: none; }
+.page.active { display: block; }
+.section-label { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; padding: 16px 16px 8px; }
+
+/* CARDS */
+.card { margin: 0 12px 8px; background: white; border-radius: 12px; border: 1px solid var(--border); padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: border-color 0.15s; }
+.card:active { border-color: var(--terra); }
+.card-info { flex: 1; min-width: 0; }
+.card-name { font-size: 14px; font-weight: 500; color: var(--dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.card-time { font-size: 12px; color: var(--green); font-weight: 500; margin-top: 4px; }
+.card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; margin-right: 10px; }
+
+/* BADGES */
+.badge { font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+.b-green { background: var(--green-light); color: var(--green-dark); }
+.b-amber { background: var(--amber-light); color: #92400E; }
+.b-red { background: #FEF2F2; color: #991B1B; }
+.b-muted { background: var(--cream); color: var(--muted); }
+
+/* TEL BUTTON */
+.tel-btn { background: var(--green-light); border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; text-decoration: none; font-size: 14px; flex-shrink: 0; transition: background 0.15s; }
+.tel-btn:active { background: #9FE1CB; }
+
+/* INCOME PAGE */
+.income-summary { margin: 12px; background: var(--dark); border-radius: 16px; padding: 20px; color: white; }
+.income-month { font-size: 11px; color: rgba(255,255,255,0.5); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+.income-total { font-family: 'Playfair Display', serif; font-size: 38px; color: white; line-height: 1; }
+.income-total span { font-size: 20px; color: var(--terra); }
+.income-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 16px; }
+.income-stat { background: rgba(255,255,255,0.07); border-radius: 10px; padding: 10px 12px; }
+.income-stat-label { font-size: 10px; color: rgba(255,255,255,0.45); margin-bottom: 4px; }
+.income-stat-value { font-size: 18px; font-weight: 500; color: white; }
+.income-stat-value.green { color: #4ADE80; }
+.income-stat-value.amber { color: #FCD34D; }
+.income-split { margin: 0 12px 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.income-split-card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 14px; }
+.isc-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+.isc-amount { font-size: 22px; font-weight: 600; color: var(--dark); }
+.isc-count { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.isc-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-left: 5px; vertical-align: middle; }
+
+/* CHART BAR */
+.chart-wrap { margin: 0 12px 8px; background: white; border-radius: 12px; border: 1px solid var(--border); padding: 14px; }
+.chart-title { font-size: 11px; color: var(--muted); margin-bottom: 12px; }
+.chart-bars { display: flex; align-items: flex-end; gap: 6px; height: 60px; }
+.bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+.bar { width: 100%; border-radius: 4px 4px 0 0; background: var(--cream); transition: height 0.3s; min-height: 3px; }
+.bar.active { background: var(--terra); }
+.bar.future { background: repeating-linear-gradient(45deg, var(--cream), var(--cream) 3px, #E8E4DC 3px, #E8E4DC 6px); }
+.bar-label { font-size: 9px; color: var(--muted); }
+
+/* APPT LIST IN INCOME */
+.income-appt { margin: 0 12px 6px; background: white; border-radius: 10px; border: 1px solid var(--border); padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; }
+.ia-left { flex: 1; min-width: 0; }
+.ia-name { font-size: 13px; font-weight: 500; color: var(--dark); }
+.ia-service { font-size: 11px; color: var(--muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ia-date { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.ia-price { font-size: 15px; font-weight: 600; color: var(--dark); flex-shrink: 0; margin-right: 12px; }
+.ia-badge { font-size: 9px; padding: 2px 6px; border-radius: 10px; flex-shrink: 0; }
+.ia-done { background: var(--green-light); color: var(--green-dark); }
+.ia-future { background: var(--amber-light); color: #92400E; }
+
+/* CHAT SCREEN */
+.chat-screen { position: fixed; inset: 0; background: var(--warm-white); display: none; flex-direction: column; z-index: 50; max-width: 430px; margin: 0 auto; }
+.chat-screen.open { display: flex; }
+.chat-header { background: var(--dark); padding: 14px 16px; display: flex; align-items: center; gap: 10px; }
+.back-btn { background: none; border: none; color: white; font-size: 20px; cursor: pointer; padding: 0 4px; line-height: 1; }
+.chat-header-info { flex: 1; }
+.chat-header-name { font-size: 15px; font-weight: 500; color: white; }
+.chat-header-status { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+.chat-tel-btn { background: rgba(255,255,255,0.1); border: none; border-radius: 50%; width: 34px; height: 34px; color: white; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; text-decoration: none; }
+.chat-messages { flex: 1; overflow-y: auto; padding: 14px 12px; display: flex; flex-direction: column; gap: 8px; }
+.msg { max-width: 78%; padding: 9px 12px; font-size: 13px; line-height: 1.55; }
+.msg-in { background: white; border: 1px solid var(--border); border-radius: 4px 14px 14px 14px; align-self: flex-start; color: var(--dark); }
+.msg-out { background: var(--dark); color: white; border-radius: 14px 4px 14px 14px; align-self: flex-end; }
+.msg-time { font-size: 10px; opacity: 0.5; margin-top: 4px; }
+.msg-in .msg-time { text-align: left; }
+.msg-out .msg-time { text-align: right; }
+
+/* EMPTY STATE */
+.empty { text-align: center; padding: 48px 24px; color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+
+<!-- PIN SCREEN -->
+<div class="pin-screen" id="pinScreen">
+  <div class="pin-logo">gili<span>.</span></div>
+  <div class="pin-subtitle">Florence Beauty Salon</div>
+  <div class="pin-dots">
+    <div class="pin-dot" id="d0"></div>
+    <div class="pin-dot" id="d1"></div>
+    <div class="pin-dot" id="d2"></div>
+    <div class="pin-dot" id="d3"></div>
+  </div>
+  <div class="pin-pad">
+    <button class="pin-btn" onclick="pinPress('1')">1</button>
+    <button class="pin-btn" onclick="pinPress('2')">2</button>
+    <button class="pin-btn" onclick="pinPress('3')">3</button>
+    <button class="pin-btn" onclick="pinPress('4')">4</button>
+    <button class="pin-btn" onclick="pinPress('5')">5</button>
+    <button class="pin-btn" onclick="pinPress('6')">6</button>
+    <button class="pin-btn" onclick="pinPress('7')">7</button>
+    <button class="pin-btn" onclick="pinPress('8')">8</button>
+    <button class="pin-btn" onclick="pinPress('9')">9</button>
+    <button class="pin-btn" onclick="pinPress('')"></button>
+    <button class="pin-btn" onclick="pinPress('0')">0</button>
+    <button class="pin-btn del" onclick="pinDel()">⌫</button>
+  </div>
+  <div class="pin-error" id="pinError"></div>
+</div>
+
+<!-- APP -->
+<div class="app">
+  <div class="header">
+    <div class="header-logo">gili<span>.</span></div>
+    <div class="header-right">
+      <div class="header-salon">Florence Beauty Salon</div>
+      <div class="header-date" id="headerDate"></div>
+    </div>
+  </div>
+  <div class="nav">
+    <button class="nav-btn active" onclick="showPage('appts',this)">
+      <span class="nav-icon"><i data-lucide="calendar" style="width:18px;height:18px"></i></span>Termine
+    </button>
+    <button class="nav-btn" onclick="showPage('income',this)">
+      <span class="nav-icon"><i data-lucide="trending-up" style="width:18px;height:18px"></i></span>Einnahmen
+    </button>
+    <button class="nav-btn" onclick="showPage('chats',this)">
+      <span class="nav-icon"><i data-lucide="message-circle" style="width:18px;height:18px"></i></span>Chats
+    </button>
+  </div>
+  <div class="content">
+    <div id="appts" class="page active">
+      <div id="apptsContent"><div class="empty">Termine laden...</div></div>
+    </div>
+    <div id="income" class="page">
+      <div id="incomeContent"><div class="empty">Daten laden...</div></div>
+    </div>
+    <div id="chats" class="page">
+      <div id="chatsContent"><div class="empty">Chats laden...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- CHAT DETAIL SCREEN -->
+<div class="chat-screen" id="chatScreen">
+  <div class="chat-header">
+    <button class="back-btn" onclick="closeChat()">←</button>
+    <div class="chat-header-info">
+      <div class="chat-header-name" id="chatName"></div>
+      <div class="chat-header-status" id="chatStatus"></div>
+    </div>
+    <a id="chatTel" href="#" class="chat-tel-btn"><i data-lucide="phone" style="width:16px;height:16px"></i></a>
+  </div>
+  <div class="chat-messages" id="chatMessages"></div>
+</div>
+
+<script>
+const CONFIG = {
+  SHEET_ID: '1B6JK0y9l5GZ0WyrHZKQf2LkAykSqMdeiHgXLsPZJkp0',
+  SHEET_NAME: 'גיליון1',
+  CALENDAR_ID: 'fdada6739af0894125bffb1aafb11bc6ba243b7ccdb03dc5c02df823f0a6bf38@group.calendar.google.com',
+  API_KEY: 'AIzaSyAZI1NiMs4QTUGhspERuN1IN0C8S1WOQ2A',
+  PIN: '1234',
+  REFRESH_MS: 30000
+};
+
+const PRICE_MAP = [
+  { keys: ['extralang','extra-lang','extra lang'], price: 168 },
+  { keys: ['ansatzblondierung','ansatz'], price: 158, note: 'lang' },
+  { keys: ['ansatzblondierung','ansatz'], price: 148, note: 'mittel' },
+  { keys: ['ansatzblondierung','ansatz'], price: 138, note: 'kurz' },
+  { keys: ['komplettfarbe','full color','full colour','coloration'], price: 115 },
+  { keys: ['strähnen','highlights','balayage'], price: 115 },
+  { keys: ['blondierung','bleaching','bleach'], price: 115 },
+  { keys: ['speziell','special package','special haircut'], price: 120 },
+  { keys: ['wash, cut & blow-dry (long)','waschen, schneiden & föhnen (lang)','long hair'], price: 100 },
+  { keys: ['wash, cut & blow-dry (medium)','waschen, schneiden & föhnen (mittel)','medium hair','mittel'], price: 80 },
+  { keys: ['wash, cut & blow-dry (short)','waschen, schneiden & föhnen (kurz)','short hair','kurz'], price: 70 },
+  { keys: ['herren','herrenhaarschnitt','men\'s haircut','men haircut'], price: 60 },
+  { keys: ['trockenhaarschnitt','dry haircut','damenhaarschnitt','women\'s haircut (short'], price: 30 },
+  { keys: ['kinder','child','children','kids'], price: 30 },
+  { keys: ['haarkur','hair treatment','hair cure'], price: 30 },
+  { keys: ['make-up','makeup','make up'], price: 100 },
+  { keys: ['augenbrauen färben & zupfen & wimpern','augenbrauen & wimpern & faden'], price: 35 },
+  { keys: ['augenbrauen & wimpern färben','augenbrauen & wimpern'], price: 25 },
+  { keys: ['augenbrauen färben & zupfen'], price: 25 },
+  { keys: ['augenbrauen zupfen','eyebrow shaping'], price: 15 },
+  { keys: ['augenbrauen färben','eyebrow tint'], price: 15 },
+  { keys: ['wimpern färben','lash tint'], price: 15 },
+  { keys: ['bart','beard'], price: 35 },
+  { keys: ['wash, cut','waschen, schneiden','haarschnitt'], price: 80 },
+];
+
+function getPrice(service) {
+  if (!service) return null;
+  const s = service.toLowerCase();
+  for (const rule of PRICE_MAP) {
+    if (rule.keys.some(k => s.includes(k.toLowerCase()))) return rule.price;
+  }
+  return null;
+}
+
+let pinEntry = '';
+function pinPress(d) {
+  if (!d) return;
+  if (pinEntry.length >= 4) return;
+  pinEntry += d;
+  updateDots();
+  if (pinEntry.length === 4) {
+    setTimeout(() => {
+      if (pinEntry === CONFIG.PIN) {
+        document.getElementById('pinScreen').classList.add('hidden');
+        loadData();
+      } else {
+        document.getElementById('pinError').textContent = 'Falscher Code';
+        pinEntry = '';
+        updateDots();
+      }
+    }, 200);
+  }
+}
+function pinDel() {
+  pinEntry = pinEntry.slice(0, -1);
+  document.getElementById('pinError').textContent = '';
+  updateDots();
+}
+function updateDots() {
+  for (let i = 0; i < 4; i++) {
+    document.getElementById('d' + i).classList.toggle('filled', i < pinEntry.length);
+  }
+}
+
+const now = new Date();
+const days = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+const months = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+document.getElementById('headerDate').textContent = `${days[now.getDay()]}, ${now.getDate()}. ${months[now.getMonth()]}`;
+
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+let allRows = [];
+let calendarEvents = [];
+
+async function loadData() {
+  try {
+    const sheetUrl = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SHEET_ID}/values/${encodeURIComponent(CONFIG.SHEET_NAME)}!A:G?key=${CONFIG.API_KEY}`;
+    const sheetRes = await fetch(sheetUrl);
+    const sheetData = await sheetRes.json();
+    const rows = sheetData.values || [];
+    allRows = rows.slice(1).map(r => ({
+      time: r[0] || '',
+      phone: r[1] || '',
+      userMsg: r[2] || '',
+      botResponse: r[3] || '',
+      status: r[4] || '',
+      customerName: r[5] || '',
+      service: r[6] || ''
+    })).filter(r => r.time);
+
+    const timeMin = new Date().toISOString();
+    const timeMax = new Date(Date.now() + 60*24*60*60*1000).toISOString();
+    const calUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(CONFIG.CALENDAR_ID)}/events?key=${CONFIG.API_KEY}&timeMin=${timeMin}&timeMax=${timeMax}&singleEvents=true&orderBy=startTime`;
+    const calRes = await fetch(calUrl);
+    const calData = await calRes.json();
+    calendarEvents = (calData.items || []).filter(e => e.status !== 'cancelled');
+
+    renderAll();
+    setTimeout(loadData, CONFIG.REFRESH_MS);
+  } catch(e) {
+    console.error('loadData error:', e);
+  }
+}
+
+function renderAll() {
+  renderAppts();
+  renderIncome();
+  renderChats();
+}
+
+function renderAppts() {
+  const byDate = {};
+  calendarEvents.forEach(event => {
+    const start = event.start?.dateTime || event.start?.date || '';
+    const date = start.slice(0,10);
+    if (!byDate[date]) byDate[date] = [];
+    const summary = event.summary || '';
+    const parts = summary.split(' \u2013 ');
+    const svc = parts[0] || summary;
+    const name = parts[1] || '';
+    const desc = event.description || '';
+    const phoneMatch = desc.match(/Phone:\s*(\d+)/);
+    const phone = phoneMatch ? phoneMatch[1] : '';
+    byDate[date].push({ start, svc, name, phone, eventId: event.id });
+  });
+
+  const sorted = Object.keys(byDate).sort();
+  let html = '';
+  if (sorted.length === 0) {
+    html = '<div class="empty">Keine Termine gefunden</div>';
+  } else {
+    sorted.forEach(date => {
+      html += `<div class="section-label">${formatDateLabel(date)}</div>`;
+      byDate[date].forEach(r => {
+        const t = formatTime(r.start);
+        const telLink = r.phone ? `<a href="tel:${r.phone}" class="tel-btn" onclick="event.stopPropagation()"><i data-lucide="phone" style="width:14px;height:14px"></i></a>` : '';
+        html += `
+          <div class="card">
+            <div class="card-info">
+              <div class="card-name">${r.name || '—'}</div>
+              <div class="card-sub">${r.svc || '—'}</div>
+              <div class="card-time">${t}</div>
+            </div>
+            <div class="card-right">
+              <span class="badge b-green">Bestätigt</span>
+              ${telLink}
+            </div>
+          </div>`;
+      });
+    });
+  }
+  document.getElementById('apptsContent').innerHTML = html;
+  renderIcons();
+}
+
+function renderIncome() {
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthEnd = new Date(now.getFullYear(), now.getMonth()+1, 23, 59, 59);
+  const todayStr = now.toISOString().slice(0,10);
+
+  const monthEvents = calendarEvents.filter(e => {
+    const d = new Date(e.start?.dateTime || e.start?.date);
+    return d >= monthStart && d <= monthEnd;
+  });
+
+  const past = monthEvents.filter(e => (e.start?.dateTime || e.start?.date).slice(0,10) <= todayStr);
+  const future = monthEvents.filter(e => (e.start?.dateTime || e.start?.date).slice(0,10) > todayStr);
+
+  const calcRevenue = arr => arr.reduce((sum, e) => {
+    const svc = (e.summary || '').split(' \u2013 ')[0];
+    return sum + (getPrice(svc) || 0);
+  }, 0);
+
+  const pastRev = calcRevenue(past);
+  const futureRev = calcRevenue(future);
+  const totalRev = pastRev + futureRev;
+
+  let apptList = '';
+  [...past, ...future].sort((a,b) =>
+    (a.start?.dateTime||a.start?.date).localeCompare(b.start?.dateTime||b.start?.date)
+  ).forEach(e => {
+    const start = e.start?.dateTime || e.start?.date;
+    const svc = (e.summary || '').split(' \u2013 ')[0];
+    const name = (e.summary || '').split(' \u2013 ')[1] || '—';
+    const price = getPrice(svc);
+    const isPast = start.slice(0,10) <= todayStr;
+    apptList += `
+      <div class="income-appt">
+        <div class="ia-left">
+          <div class="ia-name">${name}</div>
+          <div class="ia-service">${svc || '—'}</div>
+          <div class="ia-date">${formatDateShort(start.slice(0,10))} · ${formatTime(start)}</div>
+        </div>
+        <div class="ia-price">${price ? '€' + price : '—'}</div>
+        <span class="ia-badge ${isPast ? 'ia-done' : 'ia-future'}">${isPast ? 'Erledigt' : 'Ausstehend'}</span>
+      </div>`;
+  });
+
+  document.getElementById('incomeContent').innerHTML = `
+    <div class="income-summary">
+      <div class="income-month">${months[now.getMonth()]} ${now.getFullYear()}</div>
+      <div class="income-total"><span>€</span>${totalRev}</div>
+      <div class="income-grid">
+        <div class="income-stat"><div class="income-stat-label">Erledigt</div><div class="income-stat-value green">€${pastRev}</div></div>
+        <div class="income-stat"><div class="income-stat-label">Erwartet</div><div class="income-stat-value amber">€${futureRev}</div></div>
+        <div class="income-stat"><div class="income-stat-label">Termine</div><div class="income-stat-value">${monthEvents.length}</div></div>
+      </div>
+    </div>
+    <div class="income-split">
+      <div class="income-split-card">
+        <div class="isc-label">Erledigt <span class="isc-dot" style="background:#4ADE80"></span></div>
+        <div class="isc-amount">€${pastRev}</div>
+        <div class="isc-count">${past.length} Termine</div>
+      </div>
+      <div class="income-split-card">
+        <div class="isc-label">Ausstehend <span class="isc-dot" style="background:#FCD34D"></span></div>
+        <div class="isc-amount">€${futureRev}</div>
+        <div class="isc-count">${future.length} Termine</div>
+      </div>
+    </div>
+    ${buildChart(buildWeekData(monthEvents))}
+    <div class="section-label">Alle Termine diesen Monat</div>
+    ${apptList || '<div class="empty">Keine Termine diesen Monat</div>'}
+  `;
+}
+
+function buildWeekData(events) {
+  const weeks = ['KW1','KW2','KW3','KW4','KW5'];
+  return weeks.map((w,i) => {
+    const wStart = new Date(now.getFullYear(), now.getMonth(), 1 + i*7);
+    const wEnd = new Date(now.getFullYear(), now.getMonth(), 7 + i*7);
+    const rev = events.filter(e => {
+      const d = new Date(e.start?.dateTime || e.start?.date);
+      return d >= wStart && d <= wEnd;
+    }).reduce((s,e) => s + (getPrice((e.summary||'').split(' \u2013 ')[0]) || 0), 0);
+    return { label: w, rev, isCurrent: wStart <= now && now <= wEnd, isFuture: wStart > now };
+  }).filter((_,i) => new Date(now.getFullYear(), now.getMonth(), 1 + i*7) <= new Date(now.getFullYear(), now.getMonth()+1, 0));
+}
+
+function buildChart(weeks) {
+  const maxRev = Math.max(...weeks.map(w => w.rev), 1);
+  const bars = weeks.map(w => {
+    const h = Math.max(Math.round((w.rev / maxRev) * 52), 3);
+    const cls = w.isCurrent ? 'active' : w.isFuture ? 'future' : '';
+    return `<div class="bar-col"><div class="bar ${cls}" style="height:${h}px"></div><div class="bar-label">${w.label}</div></div>`;
+  }).join('');
+  return `<div class="chart-wrap"><div class="chart-title">Einnahmen pro Woche — ${months[now.getMonth()]}</div><div class="chart-bars">${bars}</div></div>`;
+}
+
+function renderChats() {
+  const calNameByPhone = {};
+  const calBookedPhones = new Set();
+  calendarEvents.forEach(e => {
+    const desc = e.description || '';
+    const phoneMatch = desc.match(/Phone:\s*(\d+)/);
+    if (phoneMatch) {
+      const phone = phoneMatch[1];
+      const name = (e.summary || '').split(' \u2013 ')[1]?.trim();
+      if (name) calNameByPhone[phone] = name;
+      calBookedPhones.add(phone);
+    }
+  });
+
+  const statusRows = allRows.filter(r => r.status && r.status !== '');
+  const byPhone = {};
+  statusRows.forEach(r => {
+    if (!byPhone[r.phone]) byPhone[r.phone] = [];
+    byPhone[r.phone].push(r);
+  });
+
+  const lastByPhone = Object.entries(byPhone)
+    .map(([phone, rows]) => rows.sort((a,b) => b.time.localeCompare(a.time))[0])
+    .sort((a,b) => b.time.localeCompare(a.time));
+
+  window._chatData = {};
+  let html = lastByPhone.length === 0 ? '<div class="empty">Keine Chats</div>' : '<div class="section-label">Letzte Chats</div>';
+
+  lastByPhone.forEach(r => {
+    const name = r.customerName || calNameByPhone[r.phone] || r.phone;
+    const preview = r.userMsg || r.botResponse || '';
+    const rel = relativeTime(r.time);
+    const effectiveStatus = calBookedPhones.has(r.phone) ? 'BOOKED' : r.status;
+    const badgeCls = effectiveStatus === 'BOOKED' ? 'b-green' : effectiveStatus === 'HANDOFF_NEEDED' ? 'b-red' : effectiveStatus === 'CANCELLED' ? 'b-muted' : 'b-amber';
+    const statusLabel = effectiveStatus === 'BOOKED' ? 'Gebucht' : effectiveStatus === 'HANDOFF_NEEDED' ? 'HANDOFF' : effectiveStatus === 'CANCELLED' ? 'Storniert' : effectiveStatus || '—';
+    const allMsgs = byPhone[r.phone].sort((a,b) => a.time.localeCompare(b.time));
+    const key = 'chat_' + r.phone.replace(/\D/g,'');
+    window._chatData[key] = { name, phone: r.phone, status: effectiveStatus, msgs: allMsgs };
+    html += `
+      <div class="card" onclick="openChatByKey('${key}')">
+        <div class="card-info">
+          <div class="card-name">${name}</div>
+          <div class="card-sub" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${preview.slice(0,50)}</div>
+          <div class="card-time" style="color:var(--muted)">${rel}</div>
+        </div>
+        <div class="card-right">
+          <span class="badge ${badgeCls}">${statusLabel}</span>
+          <a href="tel:${r.phone}" class="tel-btn" onclick="event.stopPropagation()"><i data-lucide="phone" style="width:14px;height:14px"></i></a>
+        </div>
+      </div>`;
+  });
+
+  document.getElementById('chatsContent').innerHTML = html;
+  renderIcons();
+}
+
+function openChatByKey(key) {
+  const d = window._chatData?.[key];
+  if (!d) return;
+  openChatFromRows(d.name, d.phone, d.status, d.msgs);
+}
+
+function openChatFromRows(name, phone, status, msgs) {
+  document.getElementById('chatName').textContent = name;
+  document.getElementById('chatStatus').textContent = status;
+  document.getElementById('chatTel').href = 'tel:' + phone;
+  const container = document.getElementById('chatMessages');
+  let html = '';
+  msgs.forEach(r => {
+    const t = formatTime(r.time);
+    if (r.userMsg) html += `<div><div class="msg msg-in">${r.userMsg}<div class="msg-time">${t}</div></div></div>`;
+    if (r.botResponse) {
+      const clean = r.botResponse.replace(/\[\[STATUS:\w+\]\]/g, '').trim();
+      html += `<div style="display:flex;justify-content:flex-end"><div class="msg msg-out">${clean}<div class="msg-time">${t}</div></div></div>`;
+    }
+  });
+  container.innerHTML = html || '<div class="empty">Keine Nachrichten</div>';
+  document.getElementById('chatScreen').classList.add('open');
+  setTimeout(() => { container.scrollTop = container.scrollHeight; }, 50);
+}
+
+function closeChat() {
+  document.getElementById('chatScreen').classList.remove('open');
+}
+
+function formatTime(iso) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatDateLabel(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  const todayStr = now.toISOString().slice(0,10);
+  const tomorrowStr = new Date(now.getTime() + 86400000).toISOString().slice(0,10);
+  if (dateStr === todayStr) return `Heute — ${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
+  if (dateStr === tomorrowStr) return `Morgen — ${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
+  return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]}`;
+}
+
+function formatDateShort(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  return `${d.getDate()} ${months[d.getMonth()]}`;
+}
+
+function relativeTime(iso) {
+  const diff = (now - new Date(iso)) / 1000;
+  if (diff < 60) return 'Gerade eben';
+  if (diff < 3600) return `vor ${Math.floor(diff/60)} Min.`;
+  if (diff < 86400) return `vor ${Math.floor(diff/3600)} Std.`;
+  return `vor ${Math.floor(diff/86400)} Tagen`;
+}
+
+function renderIcons() {
+  if (window.lucide) lucide.createIcons();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.lucide) lucide.createIcons();
+});
+</script>
+</body>
+</html>

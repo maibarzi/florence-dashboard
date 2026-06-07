@@ -1,0 +1,10 @@
+{
+  "name": "Florence Dashboard",
+  "short_name": "Florence",
+  "description": "Florence Beauty Salon — Dashboard",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#1A1A18",
+  "theme_color": "#1A1A18",
+  "orientation": "portrait"
+}
